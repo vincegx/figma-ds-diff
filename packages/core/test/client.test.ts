@@ -278,4 +278,65 @@ describe('createFigmaClient', () => {
       'hello',
     );
   });
+
+  // ── onRequest callback ──────────────────────────────────────────
+
+  it('calls onRequest callback on successful response', async () => {
+    const onRequest = vi.fn();
+    const trackedClient = createFigmaClient({
+      personalAccessToken: 'figd_test_token',
+      rateLimit: 100,
+      onRequest,
+    });
+
+    mockFetch(async () => jsonResponse(fileFixture));
+
+    await trackedClient.getFile('abc123');
+    expect(onRequest).toHaveBeenCalledOnce();
+    expect(onRequest).toHaveBeenCalledWith(
+      '/v1/files/abc123',
+      200,
+    );
+  });
+
+  it('calls onRequest callback on error response', async () => {
+    const onRequest = vi.fn();
+    const trackedClient = createFigmaClient({
+      personalAccessToken: 'figd_test_token',
+      rateLimit: 100,
+      maxRetries: 0,
+      onRequest,
+    });
+
+    mockFetch(async () => textResponse('Not found', 404));
+
+    await expect(trackedClient.getFile('abc123')).rejects.toThrow();
+    expect(onRequest).toHaveBeenCalledOnce();
+    expect(onRequest).toHaveBeenCalledWith(
+      '/v1/files/abc123',
+      404,
+    );
+  });
+
+  it('calls onRequest on each retry attempt', async () => {
+    const onRequest = vi.fn();
+    const trackedClient = createFigmaClient({
+      personalAccessToken: 'figd_test_token',
+      rateLimit: 100,
+      maxRetries: 1,
+      onRequest,
+    });
+
+    let callCount = 0;
+    mockFetch(async () => {
+      callCount++;
+      if (callCount === 1) return textResponse('Rate limited', 429);
+      return jsonResponse(fileFixture);
+    });
+
+    await trackedClient.getFile('abc123');
+    expect(onRequest).toHaveBeenCalledTimes(2);
+    expect(onRequest).toHaveBeenNthCalledWith(1, '/v1/files/abc123', 429);
+    expect(onRequest).toHaveBeenNthCalledWith(2, '/v1/files/abc123', 200);
+  });
 });

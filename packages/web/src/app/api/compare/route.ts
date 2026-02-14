@@ -3,6 +3,7 @@ import { mkdir } from 'node:fs/promises';
 import {
   parseFigmaUrl,
   createFigmaClient,
+  QuotaTracker,
   resolveBaseline,
   fetchFile,
   fetchNodes,
@@ -22,6 +23,7 @@ import {
   type NormalizedStyleMap,
 } from '@figma-ds-diff/core';
 import { getReportsDir } from '@/lib/reports-dir';
+import { getQuotaFilePath } from '@/lib/quota-path';
 
 export const maxDuration = 300; // 5 minutes for long comparisons
 
@@ -74,7 +76,11 @@ export async function POST(request: Request) {
           return;
         }
 
-        const client = createFigmaClient({ personalAccessToken: pat });
+        const tracker = new QuotaTracker(getQuotaFilePath());
+        const client = createFigmaClient({
+          personalAccessToken: pat,
+          onRequest: (endpoint, status) => { void tracker.trackCall(endpoint, status); },
+        });
 
         // Step 2: Resolve baseline
         progress('Resolving baseline version...');

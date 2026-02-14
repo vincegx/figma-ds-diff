@@ -14,6 +14,19 @@ export {
   type GetImagesParams,
 } from './figma/client.js';
 
+// Quota Tracker
+export {
+  QuotaTracker,
+  normalizeEndpoint,
+  TIER_CONFIGS,
+  type QuotaTier,
+  type QuotaStatus,
+  type QuotaStats,
+  type TierStats,
+  type WeeklyChartPoint,
+  type EndpointStat,
+} from './figma/quota-tracker.js';
+
 // Fetcher
 export {
   fetchFile,

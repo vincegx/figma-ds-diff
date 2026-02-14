@@ -98,6 +98,8 @@ export interface FigmaClientOptions {
   maxRetries?: number;
   /** Base URL for the Figma API (default: https://api.figma.com) */
   baseUrl?: string;
+  /** Called after each API request (success or error). For quota tracking. */
+  onRequest?: (endpoint: string, status: number) => void;
 }
 
 export interface GetFileParams {
@@ -174,11 +176,13 @@ export function createFigmaClient(options: FigmaClientOptions): FigmaClient {
       }
 
       if (response.ok) {
+        options.onRequest?.(endpoint, response.status);
         const json: unknown = await response.json();
         return schema.parse(json);
       }
 
       const body = await response.text();
+      options.onRequest?.(endpoint, response.status);
 
       if (response.status === 403) {
         const hint = body.includes('Not found')
