@@ -1,0 +1,36 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+.next/
+*.tsbuildinfo
+
+# Environment
+.env
+.env.local
+
+# Reports (generated, large images)
+/reports/
+
+# Coverage
+coverage/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Variable JSON exports (user data, not source)
+variables*.json
+
+# Claude Code local settings
+.claude/
+
+# Debug / temp
+*.log

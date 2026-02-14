@@ -1,0 +1,72 @@
+{
+  "name": "Material Design 3",
+  "version": "456789",
+  "lastModified": "2024-06-15T10:30:00Z",
+  "thumbnailUrl": "https://s3-alpha.figma.com/thumbnails/abc.png",
+  "document": {
+    "id": "0:0",
+    "name": "Document",
+    "type": "DOCUMENT",
+    "children": [
+      {
+        "id": "1:0",
+        "name": "Components",
+        "type": "CANVAS",
+        "children": [
+          {
+            "id": "1:1",
+            "name": "Button",
+            "type": "COMPONENT_SET",
+            "children": [
+              {
+                "id": "1:2",
+                "name": "Type=Primary, State=Default",
+                "type": "COMPONENT"
+              },
+              {
+                "id": "1:3",
+                "name": "Type=Primary, State=Hover",
+                "type": "COMPONENT"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "components": {
+    "1:2": {
+      "key": "comp_key_1",
+      "name": "Type=Primary, State=Default",
+      "description": "Primary button default state",
+      "componentSetId": "1:1"
+    },
+    "1:3": {
+      "key": "comp_key_2",
+      "name": "Type=Primary, State=Hover",
+      "description": "Primary button hover state",
+      "componentSetId": "1:1"
+    }
+  },
+  "componentSets": {
+    "1:1": {
+      "key": "compset_key_1",
+      "name": "Button",
+      "description": "Button component set"
+    }
+  },
+  "styles": {
+    "2:1": {
+      "key": "style_key_1",
+      "name": "Primary/500",
+      "description": "Primary brand color",
+      "styleType": "FILL"
+    },
+    "2:2": {
+      "key": "style_key_2",
+      "name": "Heading/H1",
+      "description": "Main heading style",
+      "styleType": "TEXT"
+    }
+  }
+}

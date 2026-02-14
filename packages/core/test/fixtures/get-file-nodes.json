@@ -1,0 +1,33 @@
+{
+  "name": "Material Design 3",
+  "lastModified": "2024-06-15T10:30:00Z",
+  "version": "456789",
+  "nodes": {
+    "2:1": {
+      "document": {
+        "id": "2:1",
+        "name": "Primary/500",
+        "type": "RECTANGLE",
+        "fills": [
+          {
+            "type": "SOLID",
+            "color": { "r": 0.39, "g": 0.35, "b": 0.92, "a": 1 }
+          }
+        ]
+      }
+    },
+    "2:2": {
+      "document": {
+        "id": "2:2",
+        "name": "Heading/H1",
+        "type": "TEXT",
+        "style": {
+          "fontFamily": "Roboto",
+          "fontSize": 32,
+          "fontWeight": 700,
+          "lineHeightPx": 40
+        }
+      }
+    }
+  }
+}

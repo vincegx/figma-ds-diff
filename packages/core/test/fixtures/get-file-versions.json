@@ -1,0 +1,40 @@
+{
+  "versions": [
+    {
+      "id": "ver_001",
+      "created_at": "2024-06-15T10:30:00Z",
+      "label": "Latest update",
+      "description": "Updated button styles",
+      "user": {
+        "handle": "Designer A",
+        "img_url": "https://s3-alpha.figma.com/user/abc.png",
+        "id": "user_001"
+      }
+    },
+    {
+      "id": "ver_002",
+      "created_at": "2024-03-10T08:00:00Z",
+      "label": "v2.0",
+      "description": "Major redesign",
+      "user": {
+        "handle": "Designer A",
+        "img_url": "https://s3-alpha.figma.com/user/abc.png",
+        "id": "user_001"
+      }
+    },
+    {
+      "id": "ver_003",
+      "created_at": "2024-01-05T12:00:00Z",
+      "label": null,
+      "description": null,
+      "user": {
+        "handle": "Designer B",
+        "img_url": "https://s3-alpha.figma.com/user/def.png",
+        "id": "user_002"
+      }
+    }
+  ],
+  "pagination": {
+    "before": 98765
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "meta": {
+    "styles": [
+      {
+        "key": "style_key_1",
+        "file_key": "abc123",
+        "node_id": "2:1",
+        "style_type": "FILL",
+        "thumbnail_url": "https://s3-alpha.figma.com/thumb/style1.png",
+        "name": "Primary/500",
+        "description": "Primary brand color",
+        "created_at": "2024-01-05T12:00:00Z",
+        "updated_at": "2024-06-15T10:30:00Z"
+      },
+      {
+        "key": "style_key_2",
+        "file_key": "abc123",
+        "node_id": "2:2",
+        "style_type": "TEXT",
+        "thumbnail_url": null,
+        "name": "Heading/H1",
+        "description": "Main heading style",
+        "created_at": "2024-01-05T12:00:00Z",
+        "updated_at": "2024-06-15T10:30:00Z"
+      }
+    ]
+  }
+}

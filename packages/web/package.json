@@ -1,0 +1,30 @@
+{
+  "name": "@figma-ds-diff/web",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@figma-ds-diff/core": "workspace:*",
+    "class-variance-authority": "^0.7",
+    "clsx": "^2.1",
+    "lucide-react": "^0.468",
+    "next": "^15.1",
+    "react": "^19.0",
+    "react-dom": "^19.0",
+    "tailwind-merge": "^2.6"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.0",
+    "@types/node": "^22",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "tailwindcss": "^4.0",
+    "typescript": "^5.7"
+  }
+}
