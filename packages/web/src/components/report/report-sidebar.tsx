@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { CHANGE_TYPES, type ChangeType } from '@/lib/change-types';
 import type { ReportData, ComponentDiff } from '@/types/report';
@@ -16,11 +16,12 @@ const GROUP_ORDER: ChangeType[] = ['conflict', 'upstream', 'new_upstream', 'loca
 interface ReportSidebarProps {
   data: ReportData;
   selectedId: string | null;
-  onSelect: (id: string) => void;
+  onSelect: (id: string, displayType?: ChangeType) => void;
   tab: Tab;
   onTabChange: (tab: Tab) => void;
   search: string;
   onSearchChange: (value: string) => void;
+  onClose?: () => void;
 }
 
 export function ReportSidebar({
@@ -31,6 +32,7 @@ export function ReportSidebar({
   onTabChange,
   search,
   onSearchChange,
+  onClose,
 }: ReportSidebarProps) {
   const filtered = useMemo(() => {
     if (!search) return data.components;
@@ -46,6 +48,13 @@ export function ReportSidebar({
       const list = map.get(comp.type) ?? [];
       list.push(comp);
       map.set(comp.type, list);
+
+      // Conflict items have local changes — also list them in LOCAL with local styling
+      if (comp.type === 'conflict') {
+        const locList = map.get('local') ?? [];
+        locList.push({ ...comp, type: 'local' });
+        map.set('local', locList);
+      }
     }
     return GROUP_ORDER
       .filter((type) => map.has(type))
@@ -73,15 +82,43 @@ export function ReportSidebar({
     >
       {/* ── 1. Info block ── */}
       <div className="shrink-0 px-4 pt-4 pb-3" style={{ borderBottom: '1px solid var(--border-default)' }}>
-        <Link
-          href="/"
-          className="inline-flex items-center gap-1 mb-2 transition-colors"
-          style={{ fontSize: 11, color: 'var(--text-tertiary)' }}
-          onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--text-primary)'; }}
-          onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--text-tertiary)'; }}
-        >
-          ← Back to reports
-        </Link>
+        <div className="flex items-center justify-between mb-4">
+          <Link
+            href="/"
+            className="inline-flex items-center gap-1 transition-colors"
+            style={{
+              fontSize: 11,
+              fontWeight: 600,
+              color: 'var(--text-secondary)',
+              background: 'var(--bg-surface)',
+              border: '1px solid var(--border-default)',
+              padding: '5px 10px',
+              borderRadius: 7,
+              textDecoration: 'none',
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'var(--border-hover)'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--border-default)'; }}
+          >
+            ← Reports
+          </Link>
+          {onClose && (
+            <button
+              onClick={onClose}
+              className="flex items-center justify-center cursor-pointer"
+              style={{
+                width: 28,
+                height: 28,
+                borderRadius: 7,
+                background: 'var(--bg-surface)',
+                border: '1px solid var(--border-default)',
+                color: 'var(--text-secondary)',
+                fontSize: 14,
+              }}
+            >
+              ✕
+            </button>
+          )}
+        </div>
         <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)' }} className="truncate">
           {data.meta.constructorName}
         </div>
@@ -109,18 +146,22 @@ export function ReportSidebar({
           active={tab === 'components'}
           onClick={() => onTabChange('components')}
         />
-        <TabButton
-          label="Styles"
-          count={styleCount}
-          active={tab === 'styles'}
-          onClick={() => onTabChange('styles')}
-        />
-        <TabButton
-          label="Variables"
-          count={variableCount}
-          active={tab === 'variables'}
-          onClick={() => onTabChange('variables')}
-        />
+        {styleCount > 0 && (
+          <TabButton
+            label="Named Styles"
+            count={styleCount}
+            active={tab === 'styles'}
+            onClick={() => onTabChange('styles')}
+          />
+        )}
+        {variableCount > 0 && (
+          <TabButton
+            label="Variables"
+            count={variableCount}
+            active={tab === 'variables'}
+            onClick={() => onTabChange('variables')}
+          />
+        )}
       </div>
 
       {/* ── 3. Search ── */}
@@ -147,23 +188,14 @@ export function ReportSidebar({
         {tab === 'components' ? (
           groups.length > 0 ? (
             groups.map((group, gi) => (
-              <div
+              <CollapsibleGroup
                 key={group.type}
-                className="animate-fade-up"
-                style={{ animationDelay: `${gi * 60}ms` }}
-              >
-                <GroupHeader type={group.type} count={group.items.length} />
-                {group.items.map((comp) => (
-                  <SidebarItem
-                    key={comp.id}
-                    name={comp.name}
-                    type={comp.type}
-                    diffPct={comp.diffPct}
-                    active={comp.id === selectedId}
-                    onClick={() => onSelect(comp.id)}
-                  />
-                ))}
-              </div>
+                type={group.type}
+                items={group.items}
+                selectedId={selectedId}
+                onSelect={onSelect}
+                animationDelay={gi * 60}
+              />
             ))
           ) : (
             <div className="px-2 py-6 text-center" style={{ fontSize: 11, color: 'var(--text-tertiary)' }}>
@@ -277,17 +309,54 @@ function TabButton({ label, count, active, onClick }: {
   );
 }
 
-function GroupHeader({ type, count }: { type: ChangeType; count: number }) {
+function CollapsibleGroup({
+  type,
+  items,
+  selectedId,
+  onSelect,
+  animationDelay,
+}: {
+  type: ChangeType;
+  items: ComponentDiff[];
+  selectedId: string | null;
+  onSelect: (id: string, displayType?: ChangeType) => void;
+  animationDelay: number;
+}) {
+  const [collapsed, setCollapsed] = useState(true);
   const config = CHANGE_TYPES[type];
 
   return (
-    <div
-      className="flex items-center gap-1.5 px-2 pt-3 pb-1"
-      style={{ fontSize: 10, fontWeight: 700, color: `var(--color-${config.colorVar})` }}
-    >
-      <span>{config.icon}</span>
-      <span className="uppercase tracking-wider">{config.label}</span>
-      <span style={{ color: 'var(--text-muted)', fontWeight: 500 }}>({count})</span>
+    <div className="animate-fade-up" style={{ animationDelay: `${animationDelay}ms` }}>
+      <button
+        onClick={() => setCollapsed((c) => !c)}
+        className="w-full flex items-center gap-1.5 px-2 pt-3 pb-1 cursor-pointer"
+        style={{ fontSize: 10, fontWeight: 700, color: `var(--color-${config.colorVar})`, background: 'none' }}
+      >
+        <span
+          style={{
+            display: 'inline-block',
+            transition: 'transform 150ms ease',
+            transform: collapsed ? 'rotate(-90deg)' : 'rotate(0deg)',
+            fontSize: 8,
+          }}
+        >
+          ▼
+        </span>
+        <span>{config.icon}</span>
+        <span className="uppercase tracking-wider">{config.label}</span>
+        <span style={{ color: 'var(--text-muted)', fontWeight: 500 }}>({items.length})</span>
+      </button>
+      {!collapsed &&
+        items.map((comp) => (
+          <SidebarItem
+            key={comp.id}
+            name={comp.name}
+            type={comp.type}
+            diffPct={comp.diffPct}
+            active={comp.id === selectedId}
+            onClick={() => onSelect(comp.id, comp.type)}
+          />
+        ))}
     </div>
   );
 }

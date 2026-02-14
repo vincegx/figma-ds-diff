@@ -1,12 +1,14 @@
 'use client';
 
 import { useState, useCallback, useRef, useEffect } from 'react';
-import type { ReportData } from '@/types/report';
+import type { ReportData, ComponentDiff } from '@/types/report';
+import type { ChangeType } from '@/lib/change-types';
 import { useKeyboardNav } from '@/hooks/use-keyboard-nav';
 import { ReportSidebar, type Tab } from './report-sidebar';
 import { ComponentDetail } from './component-detail';
 import { StylesTable } from './styles-table';
 import { VariablesEmpty } from './variables-empty';
+import { VariablesTable } from './variables-table';
 
 interface ReportShellProps {
   data: ReportData;
@@ -29,6 +31,7 @@ export function ReportShell({ data, slug }: ReportShellProps) {
   const [selectedId, setSelectedId] = useState<string>(
     data.components[0]?.id ?? '',
   );
+  const [typeOverride, setTypeOverride] = useState<ChangeType | null>(null);
   const [tab, setTab] = useState<Tab>('components');
   const [search, setSearch] = useState('');
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -37,8 +40,9 @@ export function ReportShell({ data, slug }: ReportShellProps) {
 
   const items = data.components.map((c) => ({ id: c.id }));
 
-  const handleSelect = useCallback((id: string) => {
+  const handleSelect = useCallback((id: string, displayType?: ChangeType) => {
     setSelectedId(id);
+    setTypeOverride(displayType ?? null);
     setDrawerOpen(false);
   }, []);
 
@@ -49,9 +53,12 @@ export function ReportShell({ data, slug }: ReportShellProps) {
     mainRef.current?.scrollTo(0, 0);
   }, [selectedId, tab]);
 
-  const currentComponent = data.components.find((c) => c.id === selectedId);
+  const rawComponent = data.components.find((c) => c.id === selectedId);
+  const currentComponent: ComponentDiff | undefined = rawComponent && typeOverride
+    ? { ...rawComponent, type: typeOverride }
+    : rawComponent;
 
-  const sidebarEl = (
+  const sidebarDesktop = (
     <ReportSidebar
       data={data}
       selectedId={selectedId}
@@ -60,6 +67,19 @@ export function ReportShell({ data, slug }: ReportShellProps) {
       onTabChange={setTab}
       search={search}
       onSearchChange={setSearch}
+    />
+  );
+
+  const sidebarMobile = (
+    <ReportSidebar
+      data={data}
+      selectedId={selectedId}
+      onSelect={handleSelect}
+      tab={tab}
+      onTabChange={setTab}
+      search={search}
+      onSearchChange={setSearch}
+      onClose={() => setDrawerOpen(false)}
     />
   );
 
@@ -74,13 +94,15 @@ export function ReportShell({ data, slug }: ReportShellProps) {
   return (
     <div className="flex flex-1 min-h-0">
       {/* Desktop sidebar */}
-      {!isMobile && sidebarEl}
+      {!isMobile && sidebarDesktop}
 
       {/* Mobile drawer */}
       {isMobile && drawerOpen && (
         <>
           <div className="drawer-overlay" onClick={() => setDrawerOpen(false)} />
-          <div className="drawer-panel">{sidebarEl}</div>
+          <div className="drawer-panel">
+            {sidebarMobile}
+          </div>
         </>
       )}
 
@@ -113,12 +135,16 @@ export function ReportShell({ data, slug }: ReportShellProps) {
               component={currentComponent}
               slug={slug}
               onNext={selectNext}
+              constructorFileKey={data.meta.constructorFileKey}
+              forkFileKey={data.meta.forkFileKey}
             />
           ) : (
             <EmptyMain message="Select a component from the sidebar" />
           )
         ) : tab === 'styles' ? (
           <StylesTable styles={data.styles} />
+        ) : (data.variables?.length ?? 0) > 0 ? (
+          <VariablesTable variables={data.variables!} />
         ) : (
           <VariablesEmpty />
         )}

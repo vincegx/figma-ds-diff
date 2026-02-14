@@ -4,6 +4,8 @@ export interface ReportData {
   meta: {
     constructorName: string;
     forkName: string;
+    constructorFileKey?: string;
+    forkFileKey?: string;
     baseline: string;
     date: string;
     summary: { upstream: number; local: number; conflicts: number; total: number };
@@ -19,7 +21,10 @@ export interface ComponentDiff {
   group: string;
   type: ChangeType;
   diffPct: number;
+  upstreamNodeId?: string;
+  localNodeId?: string;
   variants: { base: number; upstream: number; local: number };
+  details: string[];
   props: PropertyDiff[];
   images: {
     base?: string;

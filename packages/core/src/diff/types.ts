@@ -52,6 +52,10 @@ export interface DiffReport {
   constructorName: string;
   /** Fork file name */
   forkName: string;
+  /** Constructor Figma file key */
+  constructorFileKey?: string;
+  /** Fork Figma file key */
+  forkFileKey?: string;
   /** Baseline version used */
   baselineVersionId: string;
   /** Baseline version date */

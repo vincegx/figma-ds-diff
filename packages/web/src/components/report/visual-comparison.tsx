@@ -13,11 +13,12 @@ interface VisualComparisonProps {
 
 export function VisualComparison({ component, slug }: VisualComparisonProps) {
   const [mode, setMode] = useState<Mode>('side');
-  const isConflict = component.type === 'conflict';
+  const hasBaseImage = !!component.images.base;
+  const showBase = component.type === 'conflict' && hasBaseImage;
   const imgBase = `/api/reports/${slug}/images`;
 
   return (
-    <div style={{ padding: '0 28px 18px' }}>
+    <div style={{ padding: '16px 28px 18px' }}>
       {/* Header + toggle */}
       <div className="flex items-center justify-between mb-2">
         <span
@@ -54,7 +55,7 @@ export function VisualComparison({ component, slug }: VisualComparisonProps) {
         <div
           className="grid gap-2"
           style={{
-            gridTemplateColumns: isConflict ? '1fr 1fr 1fr' : '1fr 1fr',
+            gridTemplateColumns: showBase ? '1fr 1fr 1fr' : '1fr 1fr',
           }}
         >
           <ImageColumn
@@ -69,11 +70,11 @@ export function VisualComparison({ component, slug }: VisualComparisonProps) {
             src={component.images.local ? `${imgBase}/${component.images.local}` : undefined}
             variant="local"
           />
-          {isConflict && (
+          {showBase && (
             <ImageColumn
               label="Base"
               color="var(--text-muted)"
-              src={component.images.base ? `${imgBase}/${component.images.base}` : undefined}
+              src={`${imgBase}/${component.images.base}`}
               variant="base"
             />
           )}

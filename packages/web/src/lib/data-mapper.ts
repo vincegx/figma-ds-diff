@@ -1,5 +1,5 @@
 import type { ChangeType } from '@/lib/change-types';
-import type { ReportData, ComponentDiff } from '@/types/report';
+import type { ReportData, ComponentDiff, VariableDiff } from '@/types/report';
 
 /* ── Core → UI change-type mapping ── */
 const CHANGE_TYPE_MAP: Record<string, ChangeType> = {
@@ -78,15 +78,32 @@ interface CoreSummary {
   renamedLocal?: number;
 }
 
+interface CoreVariableVersion {
+  collection: string;
+  name: string;
+  type: string;
+  valuesByMode: Record<string, unknown>;
+}
+
+interface CoreVariable {
+  key: string;
+  changeType: string;
+  base?: CoreVariableVersion;
+  upstream?: CoreVariableVersion;
+  local?: CoreVariableVersion;
+}
+
 interface CoreData {
   constructorName: string;
   forkName: string;
+  constructorFileKey?: string;
+  forkFileKey?: string;
   baselineVersionId?: string;
   baselineVersionDate?: string;
   generatedAt: string;
   components: CoreComponent[];
   styles: unknown[];
-  variables: unknown[];
+  variables: CoreVariable[];
   summary: CoreSummary;
 }
 
@@ -108,14 +125,17 @@ export function mapReportData(raw: unknown): ReportData {
       group: extractGroup(comp.key),
       type,
       diffPct: 0,
+      upstreamNodeId: comp.upstream?.nodeId,
+      localNodeId: comp.local?.nodeId,
       variants: {
         base: countVariants(comp.base),
         upstream: countVariants(comp.upstream),
         local: countVariants(comp.local),
       },
+      details: (comp.details as string[] | undefined) ?? [],
       props: [],
       images: {
-        base: comp.base ? `${sanitized}_base.png` : undefined,
+        base: undefined, // Figma Images API cannot render historical versions
         upstream: comp.upstream ? `${sanitized}_upstream.png` : undefined,
         local: comp.local ? `${sanitized}_local.png` : undefined,
         diff: `${sanitized}_diff.png`,
@@ -123,10 +143,38 @@ export function mapReportData(raw: unknown): ReportData {
     };
   });
 
+  // Map variables
+  const variables: VariableDiff[] = (data.variables ?? []).map((v) => {
+    const ct = CHANGE_TYPE_MAP[v.changeType];
+    const status: VariableDiff['status'] =
+      ct === 'conflict' ? 'conflict' : ct === 'local' ? 'local' : 'upstream';
+
+    const formatValue = (ver?: CoreVariableVersion): string => {
+      if (!ver) return '—';
+      const modes = ver.valuesByMode;
+      const keys = Object.keys(modes);
+      if (keys.length === 0) return '—';
+      if (keys.length === 1) return String(modes[keys[0]!]);
+      // Multiple modes: show as "mode: value" pairs
+      return keys.map((k) => `${k}: ${String(modes[k])}`).join(', ');
+    };
+
+    return {
+      name: v.base?.name ?? v.upstream?.name ?? v.local?.name ?? v.key,
+      collection: v.base?.collection ?? v.upstream?.collection ?? v.local?.collection ?? '',
+      base: formatValue(v.base),
+      upstream: formatValue(v.upstream),
+      local: formatValue(v.local),
+      status,
+    };
+  });
+
   return {
     meta: {
       constructorName: data.constructorName,
       forkName: data.forkName,
+      constructorFileKey: data.constructorFileKey,
+      forkFileKey: data.forkFileKey,
       baseline: data.baselineVersionDate ?? 'Unknown',
       date: data.generatedAt,
       summary: {
@@ -138,6 +186,6 @@ export function mapReportData(raw: unknown): ReportData {
     },
     components,
     styles: [],
-    variables: [],
+    variables,
   };
 }

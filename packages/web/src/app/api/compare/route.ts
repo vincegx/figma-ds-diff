@@ -229,6 +229,8 @@ export async function POST(request: Request) {
         const report: DiffReport = {
           constructorName: upstreamFile.name,
           forkName: localFile.name,
+          constructorFileKey,
+          forkFileKey,
           baselineVersionId: baseline.versionId || '(two-way fallback)',
           baselineVersionDate: baseline.versionDate || 'N/A',
           generatedAt: new Date().toISOString(),
