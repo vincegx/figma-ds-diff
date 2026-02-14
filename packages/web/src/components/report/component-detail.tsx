@@ -109,12 +109,26 @@ function ChangeDetails({ details }: { details: string[] }) {
                 className="font-mono"
                 style={{ fontSize: 11, color: 'var(--text-secondary)', lineHeight: 1.5 }}
               >
-                {detail}
+                <DetailText text={detail} />
               </span>
             </div>
           ))}
         </div>
       )}
     </div>
+  );
+}
+
+function DetailText({ text }: { text: string }) {
+  const match = text.match(/^(Upstream|Local)\b(.*)/);
+  if (!match) return <>{text}</>;
+  const label = match[1]!;
+  const rest = match[2]!;
+  const color = label === 'Upstream' ? 'var(--color-upstream)' : 'var(--color-local)';
+  return (
+    <>
+      <span style={{ color, fontWeight: 600 }}>{label}</span>
+      {rest}
+    </>
   );
 }

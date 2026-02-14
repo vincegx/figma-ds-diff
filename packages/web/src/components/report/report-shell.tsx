@@ -9,6 +9,7 @@ import { ComponentDetail } from './component-detail';
 import { StylesTable } from './styles-table';
 import { VariablesEmpty } from './variables-empty';
 import { VariablesTable } from './variables-table';
+import { StatCard } from '@/components/shared/stat-card';
 
 interface ReportShellProps {
   data: ReportData;
@@ -127,6 +128,15 @@ export function ReportShell({ data, slug }: ReportShellProps) {
             <span style={{ fontSize: 16, lineHeight: 1 }}>☰</span>
             {hamburgerLabel}
           </button>
+        )}
+
+        {/* Summary stat cards */}
+        {tab === 'components' && (
+          <div className="flex gap-3 px-7 pt-5 pb-1">
+            <StatCard label="Conflicts" value={data.meta.summary.conflicts} color="var(--color-conflict)" sub="to resolve" />
+            <StatCard label="Upstream" value={data.meta.summary.upstream} color="var(--color-upstream)" sub="changes" />
+            <StatCard label="Local" value={data.meta.summary.local} color="var(--color-local)" sub="changes" />
+          </div>
         )}
 
         {tab === 'components' ? (
