@@ -1,26 +1,131 @@
 @import 'tailwindcss';
+@import '../styles/tokens.css';
 
 @theme {
-  --color-background: #0f172a;
-  --color-foreground: #f8fafc;
-  --color-muted: #1e293b;
-  --color-muted-foreground: #94a3b8;
-  --color-border: #334155;
-  --color-input: #334155;
-  --color-primary: #3b82f6;
-  --color-primary-foreground: #ffffff;
-  --color-destructive: #ef4444;
-  --color-destructive-foreground: #ffffff;
-  --color-accent: #1e293b;
-  --color-accent-foreground: #f8fafc;
-  --color-card: #1e293b;
-  --color-card-foreground: #f8fafc;
-  --color-ring: #3b82f6;
-  --radius: 0.5rem;
+  /* ── Colors ── */
+  --color-base:       var(--bg-base);
+  --color-panel:      var(--bg-panel);
+  --color-surface:    var(--bg-surface);
+
+  --color-upstream:   var(--color-upstream);
+  --color-local:      var(--color-local);
+  --color-conflict:   var(--color-conflict);
+  --color-new:        var(--color-new);
+  --color-removed:    var(--color-removed);
+  --color-diff:       var(--color-diff-highlight);
+
+  /* ── Font families ── */
+  --font-sans:        'Outfit', system-ui, sans-serif;
+  --font-mono:        'JetBrains Mono', monospace;
+
+  /* ── Border radius ── */
+  --radius-sm:        6px;
+  --radius-md:        10px;
+  --radius-lg:        14px;
+  --radius-pill:      9999px;
+
+  /* ── Border colors ── */
+  --color-border-default: var(--border-default);
+  --color-border-hover:   var(--border-hover);
+  --color-border-active:  var(--border-active);
+
+  /* ── Layout sizes ── */
+  --height-nav:       var(--nav-height);
+  --width-sidebar:    var(--sidebar-width);
+  --max-width-content: var(--max-content);
+
+  /* ── Keyframes ── */
+  --animate-fade-up:    fade-up 0.3s var(--ease-default) both;
+  --animate-fade-in:    fade-in 0.2s var(--ease-default);
+  --animate-pulse-soft: pulse-soft 2.5s ease infinite;
+  --animate-scanline:   scanline 3s linear infinite;
+  --animate-progress:   progress 3s ease forwards;
 }
 
+/* ── Keyframes ── */
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes pulse-soft {
+  0%, 100% { opacity: 0.4; }
+  50%      { opacity: 0.9; }
+}
+
+@keyframes scanline {
+  0%   { top: -2px; }
+  100% { top: calc(100% + 2px); }
+}
+
+@keyframes progress {
+  from { width: 0%; }
+  to   { width: 100%; }
+}
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-pill);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* ── Placeholder ── */
+::placeholder {
+  color: var(--text-tertiary);
+}
+
+/* ── Focus ring ── */
+:focus-visible {
+  outline: 2px solid var(--accent-from);
+  outline-offset: 2px;
+}
+
+/* ── Drawer overlay ── */
+.drawer-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  animation: fade-in 0.15s ease;
+}
+
+.drawer-panel {
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  z-index: 41;
+  width: var(--sidebar-width);
+  animation: slide-in-left 0.2s var(--ease-default);
+}
+
+@keyframes slide-in-left {
+  from { transform: translateX(-100%); }
+  to   { transform: translateX(0); }
+}
+
+/* ── Body ── */
 body {
-  background-color: var(--color-background);
-  color: var(--color-foreground);
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background-color: var(--bg-base);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
 }

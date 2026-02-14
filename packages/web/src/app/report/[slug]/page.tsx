@@ -2,6 +2,9 @@ import Link from 'next/link';
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { getReportsDir } from '@/lib/reports-dir';
+import { mapReportData } from '@/lib/data-mapper';
+import { NavBar } from '@/components/layout/nav-bar';
+import { ReportShell } from '@/components/report/report-shell';
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -12,54 +15,58 @@ export default async function ReportPage({ params }: PageProps) {
 
   // Prevent directory traversal — allowlist: alphanumeric, dash, underscore, dot (no ..)
   if (!/^[a-zA-Z0-9_-]+$/.test(slug)) {
-    return <div className="text-red-400">Invalid report slug.</div>;
+    return <ErrorState message="Invalid report slug." />;
   }
 
   const reportDir = join(getReportsDir(), slug);
-  let html: string;
+
+  let data;
   try {
-    html = await readFile(join(reportDir, 'report.html'), 'utf-8');
+    const raw = await readFile(join(reportDir, 'data.json'), 'utf-8');
+    data = mapReportData(JSON.parse(raw));
   } catch {
-    return (
-      <div className="space-y-4">
-        <Link href="/" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-          &larr; Back to reports
-        </Link>
-        <p className="text-red-400">Report not found.</p>
-      </div>
-    );
+    return <ErrorState message="Report not found." />;
   }
 
-  // Rewrite image paths: ./images/foo.png → /api/reports/{slug}/images/foo.png
-  const rewrittenHtml = html.replace(
-    /\.\/images\/([^"']+)/g,
-    `/api/reports/${slug}/images/$1`,
-  );
-
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <Link href="/" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-          &larr; Back to reports
-        </Link>
+    <div className="h-screen flex flex-col">
+      <NavBar>
         <a
           href={`/api/reports/${slug}`}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-sm text-primary hover:underline"
+          className="transition-colors"
+          style={{
+            fontSize: 11,
+            fontWeight: 600,
+            color: 'var(--text-tertiary)',
+            padding: '4px 10px',
+            borderRadius: 6,
+            border: '1px solid var(--border-default)',
+          }}
         >
-          Open standalone
+          Export ↗
         </a>
-      </div>
+      </NavBar>
+      <ReportShell data={data} slug={slug} />
+    </div>
+  );
+}
 
-      {/* Render the report HTML in an iframe for full isolation */}
-      <iframe
-        srcDoc={rewrittenHtml}
-        className="w-full border border-border rounded-lg"
-        style={{ minHeight: 'calc(100vh - 120px)' }}
-        title="Diff Report"
-        sandbox="allow-scripts"
-      />
+function ErrorState({ message }: { message: string }) {
+  return (
+    <div className="h-screen flex flex-col">
+      <NavBar />
+      <div className="flex-1 flex flex-col items-center justify-center gap-4">
+        <p style={{ fontSize: 14, color: 'var(--color-removed)' }}>{message}</p>
+        <Link
+          href="/"
+          className="transition-colors"
+          style={{ fontSize: 12, color: 'var(--text-tertiary)' }}
+        >
+          ← Back to reports
+        </Link>
+      </div>
     </div>
   );
 }
