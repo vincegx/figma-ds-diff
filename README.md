@@ -13,6 +13,7 @@
   <a href="#features">Features</a> &bull;
   <a href="#how-it-works">How It Works</a> &bull;
   <a href="#quick-start">Quick Start</a> &bull;
+  <a href="#variable-export">Variable Export</a> &bull;
   <a href="#project-structure">Structure</a> &bull;
   <a href="#tech-stack">Tech Stack</a> &bull;
   <a href="#configuration">Configuration</a>
@@ -28,6 +29,10 @@
 </p>
 
 ---
+
+<p align="center">
+  <img src="docs/Home.png" alt="DiffLib — Home dashboard" width="800" />
+</p>
 
 ## Why?
 
@@ -95,6 +100,10 @@ Constructor (upstream)          Fork (local)
    └──────────────────────────────────┘
 ```
 
+<p align="center">
+  <img src="docs/Fetch.png" alt="DiffLib — Live comparison progress" width="800" />
+</p>
+
 1. **Baseline resolution** &mdash; Walks version history to find the constructor version that matches the fork creation date
 2. **Fetch & normalize** &mdash; Pulls file data for base, upstream, and local; strips volatile fields
 3. **Diff** &mdash; Eight-case change attribution table: `upstream_changed`, `local_changed`, `conflict`, `new_upstream`, `new_local`, `deleted_upstream`, `deleted_local`, `renamed_*`
@@ -143,6 +152,60 @@ pnpm --filter @figma-ds-diff/web dev
 4. Optionally upload variable JSON exports
 5. Click **Generate** and watch the live progress
 6. View, zoom, and explore the report
+
+---
+
+## Variable Export
+
+### Why is this needed?
+
+The Figma REST API **does not expose variables** (design tokens). Unlike components and styles which DiffLib fetches automatically via the API, variables can only be accessed from within Figma itself using a plugin. This is a known limitation of Figma's public API.
+
+To include variable diffs in your report, you need to **manually export** the variables from both files using a Figma plugin, then upload the two JSON files during step 2 of the comparison wizard.
+
+### Recommended Plugin
+
+[**Luckino &mdash; Variables Import/Export JSON & CSS**](https://www.figma.com/community/plugin/1495722115809572711/luckino-variables-import-export-json-css)
+
+This plugin exports all variable collections in the **W3C Design Tokens Community Group (DTCG)** format, which is what DiffLib expects.
+
+### How to Export
+
+1. Open your **constructor** (upstream) Figma library file
+2. Run the plugin: **Plugins &rarr; Luckino Variables Import/Export**
+3. Select **Export** and choose **JSON** format
+4. Export **all collections** &mdash; save the file (e.g. `variables_constructor.json`)
+5. Open your **fork** (local) Figma library file
+6. Repeat steps 2&ndash;4 &mdash; save as `variables_fork.json`
+
+### Upload in DiffLib
+
+During comparison setup (step 2 &mdash; "Variables"), drag & drop or select both JSON files:
+
+- **First file** &rarr; constructor (upstream) variables
+- **Second file** &rarr; fork (local) variables
+
+This step is **optional** &mdash; you can skip it if you only need component and style diffs. Variable diffs are always two-way (constructor vs fork), since there is no version history for exported JSON.
+
+### Expected Format
+
+The JSON follows the DTCG structure &mdash; collections at the top level, variables nested with `$value` and `$type`:
+
+```json
+{
+  "Tokens": {
+    "Spacing": {
+      "base_1(4)": { "$value": 4, "$type": "number" },
+      "base_2(8)": { "$value": 8, "$type": "number" }
+    },
+    "Colors": {
+      "primary": { "$value": "#6366F1", "$type": "color" }
+    }
+  }
+}
+```
+
+> **Note:** When regenerating a report from the report page, variable diffs are skipped because the JSON files are not stored in the report. Re-upload them via `/new` if you need updated variable diffs.
 
 ---
 
@@ -249,6 +312,10 @@ reports/2026-02-15_011200_Library_vs_Fork/
     ├── component_name_local.png
     └── component_name_diff.png
 ```
+
+<p align="center">
+  <img src="docs/report.png" alt="DiffLib — Report viewer with side-by-side comparison" width="800" />
+</p>
 
 - **Portable** &mdash; open `report.html` directly in any browser
 - **Shareable** &mdash; zip the folder and send it to your team
