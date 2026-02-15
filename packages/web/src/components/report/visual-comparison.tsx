@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import type { ComponentDiff } from '@/types/report';
 import { PixelDiffOverlay } from './pixel-diff-overlay';
+import { ZoomableImage } from './image-lightbox';
 
 type Mode = 'side' | 'overlay';
 
@@ -80,10 +81,16 @@ export function VisualComparison({ component, slug }: VisualComparisonProps) {
           )}
         </div>
       ) : (
-        <PixelDiffOverlay
-          src={component.images.diff ? `${imgBase}/${component.images.diff}` : ''}
-          diffPct={component.diffPct}
-        />
+        <div
+          style={{
+            width: showBase ? 'calc(33.333% - 4px)' : 'calc(50% - 4px)',
+          }}
+        >
+          <PixelDiffOverlay
+            src={component.images.diff ? `${imgBase}/${component.images.diff}` : ''}
+            diffPct={component.diffPct}
+          />
+        </div>
       )}
     </div>
   );
@@ -146,7 +153,7 @@ function ImageColumn({
         {label}
       </div>
       {src && !imgError ? (
-        <img
+        <ZoomableImage
           src={src}
           alt={`${label} render`}
           className="w-full h-auto rounded-[10px]"

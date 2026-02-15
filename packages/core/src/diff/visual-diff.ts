@@ -77,6 +77,7 @@ export async function visualDiff(
     sharp(imgA)
       .resize(width, height, {
         fit: 'contain',
+        position: 'left top',
         background: { r: 255, g: 255, b: 255, alpha: 1 },
       })
       .ensureAlpha()
@@ -85,6 +86,7 @@ export async function visualDiff(
     sharp(imgB)
       .resize(width, height, {
         fit: 'contain',
+        position: 'left top',
         background: { r: 255, g: 255, b: 255, alpha: 1 },
       })
       .ensureAlpha()

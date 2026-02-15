@@ -13,6 +13,9 @@ dist/
 # Reports (generated, large images)
 /reports/
 
+# Figma API quota tracking data
+/figma-data/
+
 # Coverage
 coverage/
 

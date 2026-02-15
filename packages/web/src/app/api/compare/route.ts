@@ -24,6 +24,7 @@ import {
 } from '@figma-ds-diff/core';
 import { getReportsDir } from '@/lib/reports-dir';
 import { getQuotaFilePath } from '@/lib/quota-path';
+import { getFigmaPat } from '@/lib/runtime-config';
 
 export const maxDuration = 300; // 5 minutes for long comparisons
 
@@ -56,9 +57,9 @@ export async function POST(request: Request) {
         const { constructorUrl, forkUrl, constructorVariablesJson, forkVariablesJson } = body;
 
         // Validate PAT
-        const pat = process.env['FIGMA_PAT'];
+        const pat = await getFigmaPat();
         if (!pat) {
-          send('error', { message: 'FIGMA_PAT not configured. Set it in the .env file.' });
+          send('error', { message: 'FIGMA_PAT not configured. Please set it in Settings.' });
           controller.close();
           return;
         }

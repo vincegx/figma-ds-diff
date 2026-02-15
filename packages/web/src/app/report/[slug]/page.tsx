@@ -5,6 +5,7 @@ import { getReportsDir } from '@/lib/reports-dir';
 import { mapReportData } from '@/lib/data-mapper';
 import { NavBar } from '@/components/layout/nav-bar';
 import { ReportShell } from '@/components/report/report-shell';
+import { RegenerateButton } from '@/components/report/regenerate-button';
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -31,6 +32,10 @@ export default async function ReportPage({ params }: PageProps) {
   return (
     <div className="h-screen flex flex-col">
       <NavBar>
+        <RegenerateButton
+          constructorFileKey={data.meta.constructorFileKey}
+          forkFileKey={data.meta.forkFileKey}
+        />
         <a
           href={`/api/reports/${slug}`}
           target="_blank"

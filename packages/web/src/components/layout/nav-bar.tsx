@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import Link from 'next/link';
 import { QuotaIndicator } from '@/components/quota/quota-indicator';
 
 interface NavBarProps {
@@ -42,9 +43,27 @@ export function NavBar({ children }: NavBarProps) {
       {/* Spacer */}
       <div className="flex-1" />
 
-      {/* Quota indicator + page-specific actions */}
+      {/* Quota indicator + settings + page-specific actions */}
       <div className="flex items-center gap-3">
         <QuotaIndicator />
+        <div style={{ width: 4 }} />
+        <Link
+          href="/settings"
+          className="flex items-center justify-center shrink-0 cursor-pointer"
+          style={{
+            width: 28,
+            height: 28,
+            borderRadius: 8,
+            background: 'var(--bg-surface)',
+            border: '1px solid var(--border-default)',
+            color: 'var(--text-tertiary)',
+            fontSize: 18,
+            transition: 'all var(--duration-fast)',
+          }}
+          aria-label="Settings"
+        >
+          ⚙
+        </Link>
         {children}
       </div>
     </nav>

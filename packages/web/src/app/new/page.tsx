@@ -125,7 +125,7 @@ export default function NewComparisonPage() {
             background: 'var(--bg-surface)',
             border: '1px solid var(--border-default)',
             color: 'var(--text-tertiary)',
-            fontSize: 14,
+            fontSize: 18,
             transition: 'all var(--duration-fast)',
           }}
           onMouseEnter={(e) => {

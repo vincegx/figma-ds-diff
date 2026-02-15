@@ -49,7 +49,7 @@ cd packages/core && npx tsx test/smoke.ts
 
 ```
 packages/core/src/
-├── figma/          # API client, Zod types, fetcher, URL parser
+├── figma/          # API client, Zod types, fetcher, URL parser, quota tracker
 ├── baseline/       # Version history baseline resolver (three-way)
 ├── normalize/      # Components, styles, variables, filters
 ├── diff/           # Three-way engine, component/style/variable diff, visual diff, rename detection
@@ -61,10 +61,21 @@ packages/web/src/
 ├── app/
 │   ├── api/compare/route.ts    # POST — SSE comparison orchestration
 │   ├── api/reports/             # GET — list & serve reports
-│   ├── new/page.tsx             # Comparison form
-│   └── report/[slug]/page.tsx   # Report viewer (iframe)
-├── components/                  # InputForm, ProgressDisplay, ReportList, shadcn/ui
-└── lib/                         # utils, reports-dir
+│   ├── api/quota/route.ts       # GET — Figma API quota stats
+│   ├── api/settings/route.ts    # POST — runtime settings (FIGMA_PAT)
+│   ├── new/page.tsx             # Comparison wizard (3-step form)
+│   ├── report/[slug]/page.tsx   # Report viewer
+│   └── settings/page.tsx        # Settings page (API token config)
+├── components/
+│   ├── home/       # Hero, report table, stat cards
+│   ├── layout/     # NavBar
+│   ├── new/        # Wizard steps, processing view, step indicator
+│   ├── quota/      # Quota indicator + popover
+│   ├── report/     # Shell, sidebar, visual comparison, lightbox, pixel diff, regenerate button
+│   ├── settings/   # Settings form
+│   └── shared/     # Stat card, status dot, type badge, prop status badge
+├── hooks/          # useApiQuota, useKeyboardNav
+└── lib/            # utils, reports-dir, runtime-config, data-mapper, change-types
 ```
 
 ## Critical Design Decisions
@@ -73,14 +84,18 @@ packages/web/src/
 - **Two-way fallback:** When no common version history exists, uses empty base → everything shows as new_upstream or conflict.
 - **Variables are two-way only:** Variable JSON files are uploaded by the user (not from Figma API versioning). The constructor vars serve as both base and upstream: `diffVariables(constructorVars, constructorVars, forkVars)`.
 - **Figma Images API limitation:** `/v1/images/:key` does NOT support a `version` parameter. Visual diff is always two-way (current upstream vs current local renders).
+- **Visual diff alignment:** Images are resized with `position: 'left top'` (not center) so pixel diffs align correctly when components differ in size.
 - **Reports are filesystem-based:** Each report is a folder under `reports/` with `report.html`, `data.json`, and `images/`. Portable — works when opened directly in a browser.
 - **Report slugs include timestamp:** `YYYY-MM-DD_HHmmss_Name_vs_Fork` to avoid overwrites.
+- **Regeneration:** Reports store `constructorFileKey` and `forkFileKey` in `data.json`, allowing re-running comparisons without re-entering URLs. Variable diffs are skipped on regeneration (not stored in re-postable form).
+- **Runtime config:** FIGMA_PAT is read directly from `.env` file (not `process.env`) with a 5s cache, so token updates via the Settings page take effect without server restart.
 
 ## Environment
 
-- `FIGMA_PAT` in `.env` at project root (Figma Personal Access Token)
+- `FIGMA_PAT` in `.env` at project root (Figma Personal Access Token) — also configurable via Settings UI
 - `.env.example` provided as template
 - sharp requires: `pnpm.onlyBuiltDependencies: ["esbuild", "sharp"]` in root package.json
+- `figma-data/api-quota.json` stores API call stats (auto-created, gitignored)
 
 ## Coding Conventions
 

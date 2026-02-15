@@ -1,24 +1,67 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import type { ReportEntry } from '@/app/api/reports/route';
+
+type SortKey = 'name' | 'date' | 'upstream' | 'local' | 'conflicts';
+type SortDir = 'asc' | 'desc';
 
 interface ReportTableProps {
   reports: ReportEntry[];
 }
 
+const columns: { key: SortKey; label: string; className?: string }[] = [
+  { key: 'name', label: 'Report' },
+  { key: 'date', label: 'Date' },
+  { key: 'upstream', label: '\u2191 Up', className: 'text-center' },
+  { key: 'local', label: '\u2193 Local', className: 'text-center' },
+  { key: 'conflicts', label: '\u26A1', className: 'text-center' },
+];
+
+function compareFn(a: ReportEntry, b: ReportEntry, key: SortKey): number {
+  switch (key) {
+    case 'name':
+      return a.name.localeCompare(b.name);
+    case 'date':
+      return a.slug.localeCompare(b.slug); // slug starts with YYYY-MM-DD_HHmmss
+    case 'upstream':
+      return a.upstream - b.upstream;
+    case 'local':
+      return a.local - b.local;
+    case 'conflicts':
+      return a.conflicts - b.conflicts;
+  }
+}
+
 export function ReportTable({ reports }: ReportTableProps) {
   const [search, setSearch] = useState('');
   const [hovered, setHovered] = useState<string | null>(null);
+  const [sortKey, setSortKey] = useState<SortKey>('date');
+  const [sortDir, setSortDir] = useState<SortDir>('desc');
   const router = useRouter();
 
-  const filtered = reports.filter(
-    (r) =>
-      !search ||
-      r.name.toLowerCase().includes(search.toLowerCase()) ||
-      r.fork.toLowerCase().includes(search.toLowerCase()),
-  );
+  function handleSort(key: SortKey) {
+    if (sortKey === key) {
+      setSortDir(sortDir === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortKey(key);
+      setSortDir(key === 'name' ? 'asc' : 'desc');
+    }
+  }
+
+  const sorted = useMemo(() => {
+    const filtered = reports.filter(
+      (r) =>
+        !search ||
+        r.name.toLowerCase().includes(search.toLowerCase()) ||
+        r.fork.toLowerCase().includes(search.toLowerCase()),
+    );
+    const dir = sortDir === 'asc' ? 1 : -1;
+    return [...filtered].sort((a, b) => dir * compareFn(a, b, sortKey));
+  }, [reports, search, sortKey, sortDir]);
+
+  const arrow = sortDir === 'asc' ? ' \u2002\u25B2' : ' \u2002\u25BC';
 
   return (
     <>
@@ -66,16 +109,24 @@ export function ReportTable({ reports }: ReportTableProps) {
             borderBottom: '1px solid var(--border-default)',
           }}
         >
-          <span>Report</span>
-          <span>Date</span>
-          <span className="text-center">&#8593; Up</span>
-          <span className="text-center">&#8595; Local</span>
-          <span className="text-center">&#9889;</span>
+          {columns.map((col) => (
+            <span
+              key={col.key}
+              onClick={() => handleSort(col.key)}
+              className={`cursor-pointer select-none ${col.className ?? ''}`}
+              style={{
+                color: sortKey === col.key ? 'var(--text-secondary)' : undefined,
+                transition: 'color 0.15s',
+              }}
+            >
+              {col.label}{sortKey === col.key ? arrow : ''}
+            </span>
+          ))}
           <span />
         </div>
 
         {/* Data rows */}
-        {filtered.map((r, i) => (
+        {sorted.map((r, i) => (
           <div
             key={r.slug}
             onClick={() => router.push(`/report/${r.slug}`)}
@@ -85,7 +136,7 @@ export function ReportTable({ reports }: ReportTableProps) {
             style={{
               gridTemplateColumns: '1fr 100px 70px 70px 70px 40px',
               padding: '14px 20px',
-              borderBottom: i < filtered.length - 1 ? '1px solid rgba(255,255,255,0.03)' : 'none',
+              borderBottom: i < sorted.length - 1 ? '1px solid rgba(255,255,255,0.03)' : 'none',
               transition: 'background 0.12s',
               background: hovered === r.slug ? 'var(--bg-surface-hover)' : 'transparent',
               animationDelay: `${0.15 + i * 0.03}s`,
@@ -140,7 +191,7 @@ export function ReportTable({ reports }: ReportTableProps) {
         ))}
 
         {/* Empty state */}
-        {filtered.length === 0 && (
+        {sorted.length === 0 && (
           <div className="py-12 px-5 text-center animate-fade-up">
             {reports.length === 0 ? (
               <>

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { ZoomableImage } from './image-lightbox';
 
 interface PixelDiffOverlayProps {
   src: string;
@@ -31,7 +32,7 @@ export function PixelDiffOverlay({ src, diffPct }: PixelDiffOverlayProps) {
 
       {/* Diff image or fallback placeholders */}
       {!imgError ? (
-        <img
+        <ZoomableImage
           src={src}
           alt="Pixel diff overlay"
           className="relative w-full h-auto"
@@ -68,16 +69,6 @@ export function PixelDiffOverlay({ src, diffPct }: PixelDiffOverlayProps) {
           <div style={{ height: 140 }} />
         </>
       )}
-
-      {/* Scanline */}
-      <div
-        className="absolute left-0 right-0 animate-scanline"
-        style={{
-          height: 1,
-          background:
-            'linear-gradient(90deg, transparent, color-mix(in srgb, var(--color-diff-highlight) 25%, transparent), transparent)',
-        }}
-      />
 
       {/* Diff % indicator */}
       <div
