@@ -1,14 +1,10 @@
 'use client';
 
-import type { VariableDiff } from '@/types/report';
+import type { VariableDiff, VariableModeValue } from '@/types/report';
 import { PropStatusBadge } from '@/components/shared/prop-status-badge';
 
 interface VariablesTableProps {
   variables: VariableDiff[];
-}
-
-function isColorValue(val: string): boolean {
-  return /^#[0-9a-f]{3,8}$/i.test(val);
 }
 
 export function VariablesTable({ variables }: VariablesTableProps) {
@@ -115,7 +111,7 @@ export function VariablesTable({ variables }: VariablesTableProps) {
                   display: 'grid',
                   gridTemplateColumns: '2fr 1fr 1fr 42px',
                   padding: '9px 14px',
-                  alignItems: 'center',
+                  alignItems: 'start',
                   borderBottom:
                     i < vars.length - 1
                       ? '1px solid rgba(255,255,255,0.03)'
@@ -124,20 +120,14 @@ export function VariablesTable({ variables }: VariablesTableProps) {
                 }}
               >
                 <span
-                  className="font-mono truncate"
-                  style={{ fontSize: 11.5, fontWeight: 600, color: 'var(--text-secondary)' }}
+                  className="font-mono"
+                  style={{ fontSize: 11.5, fontWeight: 600, color: 'var(--text-secondary)', paddingTop: 2 }}
                 >
                   {v.name}
                 </span>
-                <ValueCell
-                  value={v.upstream}
-                  highlight={v.status === 'upstream' || v.status === 'conflict'}
-                />
-                <ValueCell
-                  value={v.local}
-                  highlight={v.status === 'local' || v.status === 'conflict'}
-                />
-                <div className="flex justify-end">
+                <ModeValueList values={v.upstream} side="upstream" />
+                <ModeValueList values={v.local} side="local" />
+                <div className="flex justify-end" style={{ paddingTop: 2 }}>
                   <PropStatusBadge status={v.status} />
                 </div>
               </div>
@@ -149,32 +139,51 @@ export function VariablesTable({ variables }: VariablesTableProps) {
   );
 }
 
-function ValueCell({ value, highlight }: { value: string; highlight: boolean }) {
-  const isColor = isColorValue(value);
-  return (
-    <div className="flex items-center gap-1.5">
-      {isColor && (
-        <div
-          className="shrink-0"
-          style={{
-            width: 13,
-            height: 13,
-            borderRadius: 3,
-            background: value,
-            border: '1px solid rgba(255,255,255,0.08)',
-          }}
-        />
-      )}
-      <span
-        className="font-mono truncate"
-        style={{
-          fontSize: 11,
-          fontWeight: highlight ? 600 : 400,
-          color: 'var(--text-primary)',
-        }}
-      >
-        {value}
+function ModeValueList({ values, side }: { values: VariableModeValue[]; side: 'upstream' | 'local' }) {
+  if (values.length === 0) {
+    return (
+      <span className="font-mono" style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+        —
       </span>
+    );
+  }
+
+  const showModeLabel = values.length > 1;
+
+  return (
+    <div className="flex flex-col gap-1">
+      {values.map((mv) => (
+        <div key={mv.mode} className="flex flex-col">
+          {showModeLabel && (
+            <span
+              style={{
+                fontSize: 9,
+                fontWeight: 600,
+                color: 'var(--text-muted)',
+                letterSpacing: '0.04em',
+                textTransform: 'uppercase' as const,
+                marginBottom: 1,
+              }}
+            >
+              {mv.mode}
+            </span>
+          )}
+          <span
+            className="font-mono"
+            style={{
+              fontSize: 11,
+              fontWeight: mv.changed ? 600 : 400,
+              color: mv.changed
+                ? side === 'upstream'
+                  ? 'var(--color-upstream)'
+                  : 'var(--color-local)'
+                : 'var(--text-primary)',
+            }}
+          >
+            {mv.value}
+          </span>
+        </div>
+      ))}
     </div>
   );
 }

@@ -1,5 +1,5 @@
 import type { ChangeType } from '@/lib/change-types';
-import type { ReportData, ComponentDiff, VariableDiff } from '@/types/report';
+import type { ReportData, ComponentDiff, VariableDiff, VariableModeValue } from '@/types/report';
 
 /* ── Core → UI change-type mapping ── */
 const CHANGE_TYPE_MAP: Record<string, ChangeType> = {
@@ -149,22 +149,48 @@ export function mapReportData(raw: unknown): ReportData {
     const status: VariableDiff['status'] =
       ct === 'conflict' ? 'conflict' : ct === 'local' ? 'local' : 'upstream';
 
-    const formatValue = (ver?: CoreVariableVersion): string => {
-      if (!ver) return '—';
-      const modes = ver.valuesByMode;
-      const keys = Object.keys(modes);
-      if (keys.length === 0) return '—';
-      if (keys.length === 1) return String(modes[keys[0]!]);
-      // Multiple modes: show as "mode: value" pairs
-      return keys.map((k) => `${k}: ${String(modes[k])}`).join(', ');
+    const stringify = (val: unknown): string => {
+      if (val == null) return '—';
+      if (typeof val !== 'object') return String(val);
+      return JSON.stringify(val);
     };
+
+    /** Flatten nested valuesByMode into a flat Record<modeName, stringValue>. */
+    const flattenModes = (vbm: Record<string, unknown>): Record<string, string> => {
+      const result: Record<string, string> = {};
+      for (const [key, val] of Object.entries(vbm)) {
+        if (val != null && typeof val === 'object' && !Array.isArray(val)) {
+          // Nested: { "default": { "SDS Light": "...", "SDS Dark": "..." } }
+          for (const [subKey, subVal] of Object.entries(val as Record<string, unknown>)) {
+            result[subKey] = stringify(subVal);
+          }
+        } else {
+          result[key] = stringify(val);
+        }
+      }
+      return result;
+    };
+
+    const upModes = v.upstream ? flattenModes(v.upstream.valuesByMode) : {};
+    const localModes = v.local ? flattenModes(v.local.valuesByMode) : {};
+    const allModeNames = [...new Set([...Object.keys(upModes), ...Object.keys(localModes)])];
+
+    const upstreamValues: VariableModeValue[] = allModeNames.map((mode) => ({
+      mode,
+      value: upModes[mode] ?? '—',
+      changed: upModes[mode] !== localModes[mode],
+    }));
+    const localValues: VariableModeValue[] = allModeNames.map((mode) => ({
+      mode,
+      value: localModes[mode] ?? '—',
+      changed: upModes[mode] !== localModes[mode],
+    }));
 
     return {
       name: v.base?.name ?? v.upstream?.name ?? v.local?.name ?? v.key,
       collection: v.base?.collection ?? v.upstream?.collection ?? v.local?.collection ?? '',
-      base: formatValue(v.base),
-      upstream: formatValue(v.upstream),
-      local: formatValue(v.local),
+      upstream: upstreamValues,
+      local: localValues,
       status,
     };
   });

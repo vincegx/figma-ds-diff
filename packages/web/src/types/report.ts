@@ -51,11 +51,16 @@ export interface StyleDiff {
   status: 'upstream' | 'local' | 'conflict';
 }
 
+export interface VariableModeValue {
+  mode: string;
+  value: string;
+  changed: boolean;
+}
+
 export interface VariableDiff {
   name: string;
   collection: string;
-  base: string;
-  upstream: string;
-  local: string;
+  upstream: VariableModeValue[];
+  local: VariableModeValue[];
   status: 'upstream' | 'local' | 'conflict';
 }
